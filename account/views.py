@@ -1,18 +1,24 @@
 from rest_framework.response import Response
-from rest_framework.generics import UpdateAPIView, RetrieveAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets
+# from rest_framework.generics import (UpdateAPIView, RetrieveAPIView, ListAPIView,)
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny, 
+from rest_framework.decorators import (api_view, permission_classes,)
+from rest_framework.permissions import (IsAuthenticated, AllowAny,)
 from rest_framework import status
+
+
+
 
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
-from django.utils.encoding import smart_str, smart_bytes, 
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import (smart_str, smart_bytes, )
+from django.utils.http import (urlsafe_base64_decode, urlsafe_base64_encode,)
 from django.contrib.auth import login
 from django.shortcuts import redirect
+
+
+
 
 from .models import *
 from .serializers import *
@@ -22,44 +28,15 @@ from .tokens import account_activation_token
 from .permissions import *
 
 
-class Register(APIView):
 
-    def post(self, request):
-        try:
-            data = request.data
-            serializer = UserRegisterSerializer(data = data)
-            if serializer.is_valid():
-                user = serializer.save()
-                mail_data = temp_url(request, user, reverse_name={'verify-email'}, mail_body='verify email')
-                send_email(mail_data)
-
-                return Response({
-                    'status':200,
-                    'message':'registered succesfully check email',
-                    'data':serializer.data,
-                })
-            
-            return Response({
-                'status':400,
-                'message':'something went wrong',
-                'data': serializer.errors
-            })
-        
-        except Exception as e:
-            return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
-
-class TokenRevoke(APIView):
+class TokenRevokeView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def delete(self, request):
         request.auth.delete()
         return Response(status=204)
-    
-class ProfileUpdate(UpdateAPIView):
-    serializer_class=UserProfileUpdateSerializer
-    permission_classes=[IsOwnerProfile,]
 
-class EmailVerification(APIView):
+class EmailVerificationView(APIView):
     permission_classes = [IsAuthenticated]
     def get(request):
         user = request.user
@@ -103,7 +80,7 @@ class EmailVerification(APIView):
             # invalid link
             return Response({'message': 'wrong url'}, status=status.HTTP_400_BAD_REQUEST)
         
-class PasswordForget(APIView):
+class PasswordForgetView(APIView):
 
     permission_classes=[AllowAny,]
 
@@ -167,7 +144,7 @@ class PasswordForget(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class PasswordChange(APIView):
+class PasswordChangeView(APIView):
 
     permission_classes = [IsAuthenticated]
 
@@ -185,6 +162,38 @@ class PasswordChange(APIView):
         else:
             return Response({"message": "failed", "details": serializer.errors})
 
+
+
+
+# user crud views
+
+'''
+class RegisterView(APIView):
+
+    def post(self, request):
+        try:
+            data = request.data
+            serializer = UserRegisterSerializer(data = data)
+            if serializer.is_valid():
+                user = serializer.save()
+                mail_data = temp_url(request, user, reverse_name={'verify-email'}, mail_body='verify email')
+                send_email(mail_data)
+
+                return Response({
+                    'status':200,
+                    'message':'registered succesfully check email',
+                    'data':serializer.data,
+                })
+            
+            return Response({
+                'status':400,
+                'message':'something went wrong',
+                'data': serializer.errors
+            })
+        
+        except Exception as e:
+            return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
 class UserProfileDetailView(RetrieveAPIView):
     queryset           = User.objects.all()
     serializer_class   = UserProfileSerializer
@@ -194,3 +203,58 @@ class UserProfileListView(ListAPIView):
     queryset           = User.objects.all()
     serializer_class   = UserProfileSerializer
     permission_classes = (IsStaffUser,)
+
+class ProfileUpdateView(UpdateAPIView):
+    serializer_class=UserProfileUpdateSerializer
+    permission_classes=[IsOwnerProfile,]
+'''
+
+
+# alternative user crud viewset
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+
+    def get_permissions(self):
+        print(self.action)
+        if self.action in ['partial_update', 'update', 'destroy', ]:
+            permission_classes = [IsAuthenticated, IsOwnerProfile,]
+        else:
+            permission_classes = [AllowAny,]
+
+        return [permission() for permission in permission_classes]
+    
+    def get_serializer_class(self):
+        if self.action in ['retrieve', 'list']:
+            return UserProfileSerializer
+        elif self.action in ['update', 'partial_update']:
+            return UserProfileUpdateSerializer
+        elif self.action == 'create':
+            return UserRegisterSerializer
+
+    def create(self, request,*args, **kwargs):
+        try:
+            serializer = self.get_serializer_class()(data=request.data)
+            if serializer.is_valid():
+                user = serializer.save()
+                mail_data = temp_url(request, user, reverse_name={'verify-email'}, mail_body='verify email')
+                send_email(mail_data)
+
+                return Response({
+                    'status':200,
+                    'message':'registered succesfully check email',
+                    'data':serializer.data,
+                })
+            
+            return Response({
+                'status':400,
+                'message':'something went wrong',
+                'data': serializer.errors
+            })
+        
+        except Exception as e:
+            return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# Actions: .list() , .retrieve() , .create() , .update() , .partial_update() , .destroy()

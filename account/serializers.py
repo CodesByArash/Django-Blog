@@ -4,13 +4,16 @@ from django.contrib.auth.hashers import check_password
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+
+    confirm_password = serializers.CharField(required=True, write_only = True)
+
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'confirm_password', ]
+        fields = ['username', 'email', 'password','confirm_password']
 
 
     def validate_password(self, data):
-        if data['password'] != data['confirmed_password']:
+        if data['password'] != data['confirm_password']:
             raise serializers.ValidationError("passwords should match")
         return data
 
@@ -26,10 +29,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 class ResetPasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True)
-    confirmed_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
 
     def validate(self, data):
-        if data['new_password'] != data['confirmed_password']:
+        if data['new_password'] != data['confirm_password']:
             raise serializers.ValidationError("passwords should match")
         return data
     
@@ -37,7 +40,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
-    confirmed_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
 
     def validate(self, data):
         user = self.context['request'].user
@@ -45,7 +48,7 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({'old_password': 'Wrong password.'})
         if data['old_password'] == data['new_password']:
             raise serializers.ValidationError({'new_password': 'new password should not match with old password'})
-        if data['new_password'] != data['confirmed_password']:
+        if data['new_password'] != data['confirm_password']:
             raise serializers.ValidationError({'new_password': 'new Passwords do not match.'})
         return data
     
