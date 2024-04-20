@@ -18,14 +18,14 @@ from django.contrib.auth import login
 from django.shortcuts import redirect
 
 
-
-
-from .models import *
 from .serializers import *
 from .utils import *
 from .models import *
 from .tokens import account_activation_token
 from .permissions import *
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 
@@ -164,7 +164,6 @@ class PasswordChangeView(APIView):
 
 
 
-
 # user crud views
 
 '''
@@ -210,11 +209,12 @@ class ProfileUpdateView(UpdateAPIView):
 '''
 
 
+
 # alternative user crud viewset
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-
+    lookup_field = 'username'
     def get_permissions(self):
         print(self.action)
         if self.action in ['partial_update', 'update', 'destroy', ]:
@@ -255,6 +255,5 @@ class UserViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-
 # Actions: .list() , .retrieve() , .create() , .update() , .partial_update() , .destroy()
+
