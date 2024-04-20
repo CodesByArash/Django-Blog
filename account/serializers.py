@@ -3,7 +3,7 @@ from account.models import User
 from django.contrib.auth.hashers import check_password
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'password', 'confirm_password', ]
@@ -15,11 +15,6 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        """ Creates and returns a new user """
-        # Validating Data
-        # user = User(
-        # email=validated_data['email'],
-        # password=validated_data['password'],)
         user = User(
         email=validated_data['email'],
         username=validated_data['username'],)
@@ -51,13 +46,17 @@ class ChangePasswordSerializer(serializers.Serializer):
         if data['old_password'] == data['new_password']:
             raise serializers.ValidationError({'new_password': 'new password should not match with old password'})
         if data['new_password'] != data['confirmed_password']:
-            raise serializers.ValidationError({'new_password': 'Passwords do not match.'})
+            raise serializers.ValidationError({'new_password': 'new Passwords do not match.'})
         return data
     
     
-class UpdateProfileSerializer(serializers.ModelSerializer):
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name','last_name', ]
- 
- 
+        fields = ['username', 'email', 'first_name', 'last_name', 'bio']
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id','username', 'email', 'first_name', 'last_name', 'bio']
