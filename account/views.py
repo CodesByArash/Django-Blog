@@ -1,27 +1,52 @@
 from rest_framework.response import Response
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import UpdateAPIView, RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny, 
 from rest_framework import status
-
 
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
-from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
+from django.utils.encoding import smart_str, smart_bytes, 
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.http import QueryDict
 from django.contrib.auth import login
 from django.shortcuts import redirect
 
-from account.models import *
+from .models import *
 from .serializers import *
 from .utils import *
 from .models import *
 from .tokens import account_activation_token
+from .permissions import *
 
+
+class Register(APIView):
+
+    def post(self, request):
+        try:
+            data = request.data
+            serializer = UserRegisterSerializer(data = data)
+            if serializer.is_valid():
+                user = serializer.save()
+                mail_data = temp_url(request, user, reverse_name={'verify-email'}, mail_body='verify email')
+                send_email(mail_data)
+
+                return Response({
+                    'status':200,
+                    'message':'registered succesfully check email',
+                    'data':serializer.data,
+                })
+            
+            return Response({
+                'status':400,
+                'message':'something went wrong',
+                'data': serializer.errors
+            })
+        
+        except Exception as e:
+            return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class TokenRevoke(APIView):
     permission_classes = (IsAuthenticated,)
@@ -30,30 +55,83 @@ class TokenRevoke(APIView):
         request.auth.delete()
         return Response(status=204)
     
+class ProfileUpdate(UpdateAPIView):
+    serializer_class=UserProfileUpdateSerializer
+    permission_classes=[IsOwnerProfile,]
 
-class PasswordForgetView(APIView):
+class EmailVerification(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(request):
+        user = request.user
+        if user.is_email_verified:
+            return Response({'message': 'your email is verified preveously'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        ''' # token  = account_activation_token.make_token(user) 
+        # uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+
+        # current_site = get_current_site(request=request).domain
+        # relativeLink = reverse('EmailVerification')
+
+        # absurl = 'http://'+current_site + relativeLink
+        # email_body = 'Hello, \n Use link below to verify your email  \n' + absurl +"?uidb64=" + uidb64 + "&token=" + token
+        # data = {'email_body': email_body, 'to_emails': [user.email,],'email_subject': 'Verify Email'} '''
+
+        data = temp_url(request, user, reverse_name={'verify-email'}, mail_body='verify email')
+
+        send_email(data)
+
+        return Response({'message': 'url sent to your email address'}, status=status.HTTP_202_ACCEPTED)
+    
+    def post(request):
+        uidb64, token = request.GET.get('uidb64'), request.GET.get('token')
+        if uidb64 is None or token is None:
+            return Response({'failed':'wrong url please use the url sent to your email'},status=status.HTTP_404_NOT_FOUND)
+
+        id = smart_str(urlsafe_base64_decode(uidb64))
+
+        try:
+            user = User.objects.get(id=id)
+        except:
+            return Response({'failed':'User not Found'},status=status.HTTP_404_NOT_FOUND)
+
+        if user is not None and account_activation_token.check_token(user, token):
+            user.is_email_verified = True
+            user.save()
+            login(request, user)
+            return redirect('profile')
+        else:
+            # invalid link
+            return Response({'message': 'wrong url'}, status=status.HTTP_400_BAD_REQUEST)
+        
+class PasswordForget(APIView):
+
+    permission_classes=[AllowAny,]
+
     def get(self, request):
         email = request.data.get('email', '')
 
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
-            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
-            token = PasswordResetTokenGenerator().make_token(user)
-            current_site = get_current_site(
-                request=request).domain
+            ''' # uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+            # token = PasswordResetTokenGenerator().make_token(user)
+            # current_site = get_current_site(
+            #     request=request).domain
 
-            relativeLink = reverse('forget-password',)
+            # relativeLink = reverse('forget-password',)
 
-            absurl = 'http://'+current_site + relativeLink
+            # absurl = 'http://'+current_site + relativeLink
 
-            email_body = 'Hello, \n Use the link below to reset your password  \n' + \
-                absurl+"?uidb64="+str(uidb64)+"&token="+str(token) 
+            # email_body = 'Hello, \n Use the link below to reset your password  \n' + \
+            #     absurl+"?uidb64="+str(uidb64)+"&token="+str(token) 
                 
-            data = {'email_body': email_body, 'to_emails': [user.email,],
-                'email_subject': 'Reset your passsword'}
+            # data = {'email_body': email_body, 'to_emails': [user.email,],
+            #     'email_subject': 'Reset your passsword'} '''
+
+            data = temp_url(request, user, reverse_name={'forget-password'}, mail_body='reset password')
+
             send_email(data)
 
-            return Response({'success': 'We have sent you a link to reset your password'}, status=status.HTTP_200_OK)
+            return Response({'success': 'a link to reset your password sent'}, status=status.HTTP_200_OK)
         else:
             return Response({'failed':'User not Found'},status=status.HTTP_404_NOT_FOUND)
         
@@ -89,8 +167,8 @@ class PasswordForgetView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
 class PasswordChange(APIView):
+
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
@@ -106,54 +184,13 @@ class PasswordChange(APIView):
             return Response({"message": "password updated successfully"})
         else:
             return Response({"message": "failed", "details": serializer.errors})
-    
 
-class ProfileUpdate(UpdateAPIView):
-    serializer_class=UpdateProfileSerializer
-    permission_classes=[IsAuthenticated]
+class UserProfileDetailView(RetrieveAPIView):
+    queryset           = User.objects.all()
+    serializer_class   = UserProfileSerializer
+    permission_classes = (IsAuthenticated,)
 
-
-class EmailVerification(APIView):
-
-    def get(request):
-        user = request.user
-        if user.is_email_verified:
-            return Response({'message': 'your email is verified preveously'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        token  = account_activation_token.make_token(user) 
-        uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
-
-        current_site = get_current_site(request=request).domain
-        relativeLink = reverse('EmailVerification')
-
-        absurl = 'http://'+current_site + relativeLink
-        email_body = 'Hello, \n Use link below to verify your email  \n' + absurl +"?uidb64=" + uidb64 + "&token=" + token
-        data = {'email_body': email_body, 'to_emails': [user.email,],'email_subject': 'Verify Email'}
-
-        send_email(data)
-
-        return Response({'message': 'email was sent to your email address'}, status=status.HTTP_202_ACCEPTED)
-    
-    def post(request):
-        uidb64, token = request.GET.get('uidb64'), request.GET.get('token')
-        if uidb64 is None or token is None:
-            return Response({'failed':'wrong url please use the url sent to your email'},status=status.HTTP_404_NOT_FOUND)
-
-        id = smart_str(urlsafe_base64_decode(uidb64))
-
-        try:
-            user = User.objects.get(id=id)
-        except:
-            return Response({'failed':'User not Found'},status=status.HTTP_404_NOT_FOUND)
-
-
-        if user is not None and account_activation_token.check_token(user, token):
-            user.is_email_verified = True
-            user.save()
-            login(request, user)
-            return redirect('profile')
-        else:
-            # invalid link
-            return Response({'message': 'wrong url'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # return Response({'message': 'email verified succesfully'}, status=status.HTTP_202_ACCEPTED)
+class UserProfileListView(ListAPIView):
+    queryset           = User.objects.all()
+    serializer_class   = UserProfileSerializer
+    permission_classes = (IsStaffUser,)
