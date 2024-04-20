@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgres/data
+    environment:
+      - POSTGRES_DB = postgres
+      - POSTGRES_USER = postgres
+      - POSTGRES_PASSWORD = postgres
+    web:
+      build: .
+      command: python manage.py runserver 0.0.0.0:8000
+      volumes:
+        - .:/code
+      environment:
+        - DOCKER = docker
+        - POSTGRES_DB = postgres
+        - POSTGRES_USER = postgres
+        - POSTGRES_PASSWORD = postgres
+        - SECRET_KEY = django-insecure-js+477q(q_kf3l6puftw0g019cgah8o)50wro0e)2zd($hpgs=
+      ports:
+        - "8000:8000"
+      depends_on:
+        - db
+      
