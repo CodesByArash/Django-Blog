@@ -12,9 +12,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password','confirm_password']
 
 
-    def validate_password(self, data):
-        if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError("passwords should match")
+    def validate(self, data):
+        passw , c_passw = data.get('password'), data.get('confirm_password')
+        if passw and c_passw:
+            if passw != c_passw:
+                raise serializers.ValidationError("passwords should match")
+        print("validation")
         return data
 
     def create(self, validated_data):
@@ -23,6 +26,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         username=validated_data['username'],)
         user.set_password(validated_data['password'])
         user.save()
+        
+        print("create")
 
         return user
 
