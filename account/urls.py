@@ -5,7 +5,7 @@ from django.urls import path
 
 from .views import *
 
-app_name = 'api'
+app_name = 'account'
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='users')
 
