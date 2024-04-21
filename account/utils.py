@@ -21,12 +21,13 @@ def send_email(data):
 
 def temp_url(request, user, reverse_name, mail_body):
     token  = account_activation_token.make_token(user)
-    uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
 
+
+    uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
     current_site = get_current_site(request=request).domain
-    relativeLink = reverse(reverse_name)
+    relativeLink = reverse('account:'+reverse_name)
 
     absurl = 'http://'+current_site + relativeLink
-    email_body = f'Hello, \n Use link below to {email_body}  \n' + absurl +"?uidb64=" + uidb64 + "&token=" + token
-    data = {'email_body': email_body, 'to_emails': [user.email,],'email_subject': {email_body}}
+    email_body = f'Hello, \n Use link below to {mail_body}  \n' + absurl +"?uidb64=" + uidb64 + "&token=" + token
+    data = {'email_body': email_body, 'to_emails': [user.email,],'email_subject': mail_body}
     return data
