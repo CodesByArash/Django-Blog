@@ -233,7 +233,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserRegisterSerializer
 
     def create(self, request,*args, **kwargs):
-        # try:
+        try:
             serializer = self.get_serializer_class()(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
@@ -251,7 +251,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 'message':'something went wrong',
                 'data': serializer.errors
             })
-        # except Exception as e:
-        #     return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
