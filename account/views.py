@@ -53,7 +53,7 @@ class EmailVerificationView(APIView):
         # email_body = 'Hello, \n Use link below to verify your email  \n' + absurl +"?uidb64=" + uidb64 + "&token=" + token
         # data = {'email_body': email_body, 'to_emails': [user.email,],'email_subject': 'Verify Email'} '''
 
-        data = temp_url(request, user, reverse_name={'verify-email'}, mail_body='verify email')
+        data = temp_url(request, user, reverse_name='verify-email', mail_body='verify email')
 
         send_email(data)
 
@@ -216,7 +216,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     lookup_field = 'username'
     def get_permissions(self):
-        print(self.action)
+
         if self.action in ['partial_update', 'update', 'destroy', ]:
             permission_classes = [IsAuthenticated, IsOwnerProfile,]
         else:
@@ -233,11 +233,11 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserRegisterSerializer
 
     def create(self, request,*args, **kwargs):
-        try:
+        # try:
             serializer = self.get_serializer_class()(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
-                mail_data = temp_url(request, user, reverse_name={'verify-email'}, mail_body='verify email')
+                mail_data = temp_url(request, user, reverse_name="verify-email", mail_body='verify email')
                 send_email(mail_data)
 
                 return Response({
@@ -251,9 +251,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 'message':'something went wrong',
                 'data': serializer.errors
             })
-        
-        except Exception as e:
-            return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+        # except Exception as e:
+        #     return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
-# Actions: .list() , .retrieve() , .create() , .update() , .partial_update() , .destroy()
 
