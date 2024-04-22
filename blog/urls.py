@@ -6,7 +6,9 @@ from django.urls import path,include
 app_name = "blog"
 
 urlpatterns = [
-    path("",ArticleList.as_view(), name="list"),
-    path("<slug:slug>/",ArticleDetail.as_view(), name="detail"),
-
+    path("articles/",ArticleListView.as_view(), name="articles"),
+    path("articles/<slug:slug>/", ArticleDetailView.as_view(), name="article-detail"),
+    path("articles/category/<str:name>/", CategoryArticleListView.as_view(), name="category-articles"),
+    path("categories", CategoryListView.as_view(), name='categories'),
+    path("categories/<str:name>/",CategoryDetailView.as_view(), name="category-detail")
 ]
