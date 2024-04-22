@@ -10,13 +10,17 @@ User = get_user_model()
 class Category(models.Model):
     id          = models.UUIDField(primary_key = True, default= uuid.uuid4, editable = False)
     name        = models.CharField(max_length = 50, blank = False, null = False, unique = True)
-    description = models.CharField 
+    description = models.CharField(max_length = 200, blank = False, null = False,)
 
     class Meta:
         verbose_name_plural = "categories"
 
     def __str__(self):
         return self.name
+    def save(self, *args, **kwargs):
+        if not self.description:
+            self.description = self.name
+        super(Category, self).save(*args, **kwargs)
 
 
 class Article(models.Model):
@@ -34,3 +38,4 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title
+    
