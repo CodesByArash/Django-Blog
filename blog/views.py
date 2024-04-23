@@ -53,11 +53,13 @@ class ArticleDetailView(RetrieveUpdateDestroyAPIView, ):
 class CategoryListView(ListCreateAPIView):
     serializer_class   = CategorySerializer
     lookup_field       = "name"
+    queryset           = Category.objects.all()
     permission_classes = [IsStaffOrReadOnly, ]
 
 class CategoryDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class   = CategorySerializer
     lookup_field       = "name"
+    queryset           = Category.objects.all()
     permission_classes = [IsStaffOrReadOnly, ]
 
 class CategoryArticleListView(ListAPIView):
@@ -65,7 +67,7 @@ class CategoryArticleListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        cat  = self.kwargs['name']
+        cat  = self.kwargs.get('name')
         cat  = get_object_or_404(Category, name = cat)
         if user.is_authenticated:
             if user.is_staff:
