@@ -39,3 +39,4 @@ class IsAuthorOrStaffOrStatusTrue(BasePermission):
             request.user.is_authenticated and obj.author == request.user
         )
 
+ 
