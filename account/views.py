@@ -1,14 +1,16 @@
 from rest_framework.response import Response
 from rest_framework import viewsets
-# from rest_framework.generics import (UpdateAPIView, RetrieveAPIView, ListAPIView,)
 from rest_framework.views import APIView
 from rest_framework.decorators import (api_view, permission_classes,)
 from rest_framework.permissions import (IsAuthenticated, AllowAny,)
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 
+
+from django.shortcuts import get_object_or_404
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
-from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import (smart_str, smart_bytes, )
 from django.utils.http import (urlsafe_base64_decode, urlsafe_base64_encode,)
 from django.contrib.auth import login
@@ -32,19 +34,29 @@ class TokenRevokeView(APIView):
         return Response(status=204)
 
 class EmailVerificationView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(request):
+    # permission_classes = [AllowAny,]
+    def get_permissions(self):
+        if self.request.method == "POST":
+            permission_classes = [AllowAny,]
+        else:
+            permission_classes = [IsAuthenticated,]
+
+        return [permission() for permission in permission_classes]
+
+    def get(self,request):
         user = request.user
         if user.is_email_verified:
             return Response({'message': 'your email is verified preveously'}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = temp_url(request, user, reverse_name='verify-email', mail_body='verify email')
+        token  = account_activation_token.make_token(user)
+
+        data = temp_url(request, user, reverse_name='verify-email', mail_body='verify email', token = token)
 
         send_email(data)
 
         return Response({'message': 'url sent to your email address'}, status=status.HTTP_202_ACCEPTED)
     
-    def post(request):
+    def post(self,request):
         uidb64, token = request.GET.get('uidb64'), request.GET.get('token')
         if uidb64 is None or token is None:
             return Response({'failed':'wrong url please use the url sent to your email'},status=status.HTTP_404_NOT_FOUND)
@@ -52,18 +64,22 @@ class EmailVerificationView(APIView):
         id = smart_str(urlsafe_base64_decode(uidb64))
 
         try:
-            user = User.objects.get(id=id)
+            user = User.objects.get(pk=id)
         except:
-            return Response({'failed':'User not Found'},status=status.HTTP_404_NOT_FOUND)
-
-        if user is not None and account_activation_token.check_token(user, token):
+            return Response({'message': "wrong url"}, status=status.HTTP_404_NOT_FOUND)
+ 
+        
+        if account_activation_token.check_token(user, token):
             user.is_email_verified = True
             user.save()
-            login(request, user)
-            return redirect('profile')
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+            
+            return Response({'message': 'email verified successfully', 'refresh':refresh_token, 'access':access_token}, status=status.HTTP_200_OK)
         else:
             # invalid link
-            return Response({'message': 'wrong url'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'wrong url'}, status=status.HTTP_404_NOT_FOUND)
         
 class PasswordForgetView(APIView):
 
@@ -75,7 +91,9 @@ class PasswordForgetView(APIView):
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
 
-            data = temp_url(request, user, reverse_name={'forget-password'}, mail_body='reset password')
+            token  = PasswordResetTokenGenerator().make_token(user)
+
+            data = temp_url(request, user, reverse_name={'forget-password'}, mail_body='reset password', token=token)
 
             send_email(data)
 
@@ -159,7 +177,9 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer_class()(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
-                mail_data = temp_url(request, user, reverse_name="verify-email", mail_body='verify email')
+                token  = account_activation_token.make_token(user)
+
+                mail_data = temp_url(request, user, reverse_name="verify-email", mail_body='verify email',token=token)
                 send_email(mail_data)
 
                 return Response({
