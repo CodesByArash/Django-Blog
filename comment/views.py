@@ -5,7 +5,6 @@ from django.shortcuts import render
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
-from blog.permissions import *
 from .permissions import *
 from .serializers import *
 from .models import *
@@ -16,7 +15,7 @@ from blog.models import Article
 class CommentDetailView(RetrieveUpdateDestroyAPIView, ):
     serializer_class   = CommentSerializer
     lookup_field       = "id"
-    permission_classes = [IsAuthorOrReadOnly,]
+    permission_classes = [CommentPermissionClass,]
     def get_queryset(self):
         user = self.request.user
         slug  = self.kwargs['slug']
