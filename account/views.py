@@ -84,22 +84,27 @@ class EmailVerificationView(APIView):
 class PasswordForgetView(APIView):
 
     permission_classes=[AllowAny,]
+    serializer_class = ForgetPasswordSerializer
 
     def get(self, request):
-        email = request.data.get('email', '')
+        # email = request.GET.get('email', '')
+        serializer = self.serializer_class(data=request.data)
 
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
+        if serializer.is_valid():
+            if User.objects.filter(email=serializer.validated_data.get('email')).exists():
+                user = User.objects.get(email=serializer.validated_data.get('email'))
 
-            token  = PasswordResetTokenGenerator().make_token(user)
+                token  = PasswordResetTokenGenerator().make_token(user)
 
-            data = temp_url(request, user, reverse_name={'forget-password'}, mail_body='reset password', token=token)
+                data = temp_url(request, user, reverse_name='forget-password', mail_body='reset password', token=token)
 
-            send_email(data)
+                send_email(data)
 
-            return Response({'success': 'a link to reset your password sent'}, status=status.HTTP_200_OK)
+                return Response({'success': 'a link to reset your password sent'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'failed':'no user with this email'},status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response({'failed':'User not Found'},status=status.HTTP_404_NOT_FOUND)
+            return Response({'failed':'email not valid',"errors":serializer.errors},status=status.HTTP_404_NOT_FOUND)
         
 
     def post(self, request):
