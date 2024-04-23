@@ -31,9 +31,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY',
 
 # SECURITY WARNING: don't run with debug turned on in production!
 if docker != "docker":
-    DEBUG = False
-else:
     DEBUG = True
+else:
+    DEBUG = False
 
 ALLOWED_HOSTS = ['0.0.0.0',]
 
