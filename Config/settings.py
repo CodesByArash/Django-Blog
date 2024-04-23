@@ -30,7 +30,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY',
                             'django-insecure-js+477q(q_kf3l6puftw0g019cgah8o)50wro0e)2zd($hpgs=')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if docker != "docker":
+    DEBUG = False
+else:
+    DEBUG = True
 
 ALLOWED_HOSTS = ['0.0.0.0',]
 
@@ -179,3 +182,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
 }
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
