@@ -20,3 +20,4 @@ class CommentSerializer(serializers.ModelSerializer):
         article.save()
 
         return article
+
