@@ -36,9 +36,7 @@ class TokenRevokeView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
         
-
 class EmailVerificationView(APIView):
-    # permission_classes = [AllowAny,]
     def get_permissions(self):
         if self.request.method == "POST":
             permission_classes = [AllowAny,]
@@ -56,7 +54,7 @@ class EmailVerificationView(APIView):
         uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
 
 
-        data = email_body(request, user, reverse_name='verify-email', mail_body='verify email', token = token, uidb64=uidb64)
+        data = email_body(request, user, reverse_name='verify-email', mail_body='verify email', form_type="post", token = token, uidb64=uidb64)
 
         send_email(data)
 
@@ -90,32 +88,27 @@ class EmailVerificationView(APIView):
             # invalid link
             return Response({'message': 'wrong url'}, status=status.HTTP_404_NOT_FOUND)
         
-class PasswordForgetView(APIView):
-
+class RequestPasswordResetView(APIView):
     permission_classes=[AllowAny,]
     serializer_class = ForgetPasswordSerializer
 
-    def get(self, request):
-        serializer = self.serializer_class(data=request.GET)
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            if User.objects.filter(email=serializer.validated_data.get('email')).exists():
-                user = User.objects.get(email=serializer.validated_data.get('email'))
+            user = get_object_or_404(User,email=serializer.validated_data.get('email'))
 
-                token  = PasswordResetTokenGenerator().make_token(user)
-                uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
+            token  = PasswordResetTokenGenerator().make_token(user)
+            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
 
+            data = email_body(request, user, reverse_name='reset-password', mail_body='reset password', form_type="get", token=token, uidb64=uidb64)
 
-                data = email_body(request, user, reverse_name='forget-password', mail_body='reset password', token=token, uidb64=uidb64)
+            send_email(data)
 
-                send_email(data)
-
-                return Response({'success': 'a link to reset your password sent'}, status=status.HTTP_202_ACCEPTED)
-            else:
-                return Response({'message':'no user with this email'},status=status.HTTP_404_NOT_FOUND)
+            return Response({'success': 'a link to reset your password sent'}, status=status.HTTP_202_ACCEPTED)
         else:
             return Response({'message':'email not valid',"errors":serializer.errors},status=status.HTTP_404_NOT_FOUND)
         
-
+class PasswordResetView(APIView):
     def post(self, request):
         uidb64, token = request.GET.get('uidb64'), request.GET.get('token')
 
@@ -195,7 +188,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
 
 
-                mail_data = email_body(request, user, reverse_name="verify-email", mail_body='verify email',token=token, uidb64=uidb64)
+                mail_data = email_body(request, user, reverse_name="verify-email", mail_body='verify email', form_type="post",token=token, uidb64=uidb64)
                 send_email(mail_data)
 
                 return Response({

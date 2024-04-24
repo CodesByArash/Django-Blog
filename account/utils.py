@@ -9,20 +9,12 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
 def send_email(data):
-    # email = EmailMessage(
-    #     data['email_subject'], 
-    #     data['email_body'] ,
-    #     settings.EMAIL_HOST, 
-    #     data['to_emails'],
-    #     html_message = data['html_message']
-    # )
-    # email.send()
+
     send_mail(data['email_subject'], 
         data['email_body'] ,
         settings.EMAIL_HOST, 
         data['to_emails'],
-        html_message = data['html_message']
-        )
+        html_message = data['html_message'])
 
 
 def temp_url(request, reverse_name, token, uidb64):
@@ -35,12 +27,13 @@ def temp_url(request, reverse_name, token, uidb64):
     url    = absurl +"?uidb64=" + uidb64 + "&token=" + token
     return url
 
-def email_body(request, user, reverse_name, mail_body, token, uidb64):
+def email_body(request, user, reverse_name, mail_body, form_type, token, uidb64):
     url = temp_url(request, reverse_name, token, uidb64)
     context = {
         'username': user.username,
         'temp_url': url,
-        'mail_body': mail_body
+        'mail_body': mail_body,
+        'form_type':form_type
     }
     html_message = render_to_string('mail_template.html', context=context)
     email_body = strip_tags(html_message)

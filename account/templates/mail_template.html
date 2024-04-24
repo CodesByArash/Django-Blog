@@ -7,7 +7,7 @@
 <body>
     <p>Hello {{ username }},</p>
     <p>Click the link below to {{ mail_body }}:</p>
-    <form action="{{ temp_url }}" method="post">
+    <form action="{{ temp_url }}" method={{ form_type }}>
         <button type="submit">{{ mail_body }}</button>
     </form>
 </body>
