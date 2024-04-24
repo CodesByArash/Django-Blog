@@ -5,7 +5,7 @@
 The first thing to do is to clone the repository:
 
 ```sh
-$ git clone https://github.com/gomofficial/social-media.git
+$ git clone https://github.com/gomofficial/Django-Blog.git
 ```
 
 Create a virtual environment to install dependencies in and activate it:
