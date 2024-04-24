@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from account.models import User
 from django.contrib.auth.hashers import check_password
-
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 class UserRegisterSerializer(serializers.ModelSerializer):
 
@@ -69,6 +70,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id','username', 'email', 'first_name', 'last_name', 'bio']
 
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+        return attrs
+    
+    def save(self,**kwargs):
+        try:
+            RefreshToken(self.token).blacklist()
+        except TokenError:
+            self.fail("wrong token")
 
 class ForgetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)

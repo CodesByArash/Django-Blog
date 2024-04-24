@@ -6,6 +6,7 @@ from rest_framework.permissions import (IsAuthenticated, AllowAny,)
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
+
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -27,10 +28,14 @@ User = get_user_model()
 
 class TokenRevokeView(APIView):
     permission_classes = (IsAuthenticated,)
-
+    serializer_class   = LogoutSerializer
     def delete(self, request):
-        request.auth.delete()
-        return Response(status=204)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception = True)
+        serializer.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
 
 class EmailVerificationView(APIView):
     # permission_classes = [AllowAny,]
