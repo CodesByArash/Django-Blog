@@ -53,8 +53,10 @@ class EmailVerificationView(APIView):
             return Response({'message': 'your email is verified preveously'}, status=status.HTTP_400_BAD_REQUEST)
 
         token  = account_activation_token.make_token(user)
+        uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
 
-        data = temp_url(request, user, reverse_name='verify-email', mail_body='verify email', token = token)
+
+        data = email_body(request, user, reverse_name='verify-email', mail_body='verify email', token = token, uidb64=uidb64)
 
         send_email(data)
 
@@ -65,7 +67,10 @@ class EmailVerificationView(APIView):
         if uidb64 is None or token is None:
             return Response({'failed':'wrong url please use the url sent to your email'},status=status.HTTP_404_NOT_FOUND)
 
-        id = smart_str(urlsafe_base64_decode(uidb64))
+        try:
+            id = smart_str(urlsafe_base64_decode(uidb64))
+        except:
+            return Response({'message': "wrong url"}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             user = User.objects.get(pk=id)
@@ -91,24 +96,24 @@ class PasswordForgetView(APIView):
     serializer_class = ForgetPasswordSerializer
 
     def get(self, request):
-        # email = request.GET.get('email', '')
-        serializer = self.serializer_class(data=request.data)
-
+        serializer = self.serializer_class(data=request.GET)
         if serializer.is_valid():
             if User.objects.filter(email=serializer.validated_data.get('email')).exists():
                 user = User.objects.get(email=serializer.validated_data.get('email'))
 
                 token  = PasswordResetTokenGenerator().make_token(user)
+                uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
 
-                data = temp_url(request, user, reverse_name='forget-password', mail_body='reset password', token=token)
+
+                data = email_body(request, user, reverse_name='forget-password', mail_body='reset password', token=token, uidb64=uidb64)
 
                 send_email(data)
 
-                return Response({'success': 'a link to reset your password sent'}, status=status.HTTP_200_OK)
+                return Response({'success': 'a link to reset your password sent'}, status=status.HTTP_202_ACCEPTED)
             else:
-                return Response({'failed':'no user with this email'},status=status.HTTP_404_NOT_FOUND)
+                return Response({'message':'no user with this email'},status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response({'failed':'email not valid',"errors":serializer.errors},status=status.HTTP_404_NOT_FOUND)
+            return Response({'message':'email not valid',"errors":serializer.errors},status=status.HTTP_404_NOT_FOUND)
         
 
     def post(self, request):
@@ -187,8 +192,10 @@ class UserViewSet(viewsets.ModelViewSet):
             if serializer.is_valid():
                 user = serializer.save()
                 token  = account_activation_token.make_token(user)
+                uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
 
-                mail_data = temp_url(request, user, reverse_name="verify-email", mail_body='verify email',token=token)
+
+                mail_data = email_body(request, user, reverse_name="verify-email", mail_body='verify email',token=token, uidb64=uidb64)
                 send_email(mail_data)
 
                 return Response({
@@ -203,7 +210,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 # alternative user crud viewset
 '''
 class RegisterView(APIView):
@@ -214,7 +220,7 @@ class RegisterView(APIView):
             serializer = UserRegisterSerializer(data = data)
             if serializer.is_valid():
                 user = serializer.save()
-                mail_data = temp_url(request, user, reverse_name={'verify-email'}, mail_body='verify email')
+                mail_data = email_body(request, user, reverse_name={'verify-email'}, mail_body='verify email')
                 send_email(mail_data)
 
                 return Response({

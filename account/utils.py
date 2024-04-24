@@ -25,15 +25,18 @@ def send_email(data):
         )
 
 
-def temp_url(request, user, reverse_name, mail_body, token):
+def temp_url(request, reverse_name, token, uidb64):
 
-    uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
+    uidb64       = uidb64
     current_site = get_current_site(request=request).domain
     relativeLink = reverse('account:'+reverse_name)
 
     absurl = 'http://'+current_site + relativeLink
     url    = absurl +"?uidb64=" + uidb64 + "&token=" + token
-    # email_body = f'Hello, \n Use link below to {mail_body}  \n'
+    return url
+
+def email_body(request, user, reverse_name, mail_body, token, uidb64):
+    url = temp_url(request, reverse_name, token, uidb64)
     context = {
         'username': user.username,
         'temp_url': url,
