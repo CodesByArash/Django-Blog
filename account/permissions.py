@@ -11,4 +11,4 @@ class IsOwnerProfile(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # Check if the user is the owner of the profile
-        return request.user.is_authenticated and obj.user == request.user
+        return request.user.is_authenticated and obj == request.user
