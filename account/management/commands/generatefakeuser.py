@@ -1,10 +1,6 @@
 from faker import Faker
 from account.models import User
-from core.models import Post
-from django.shortcuts import get_object_or_404
 from django.core.management.base import BaseCommand
-
-
 
 
 class Command(BaseCommand):
@@ -29,9 +25,7 @@ class Command(BaseCommand):
             bio        = faker.paragraph(nb_sentences=2)
             user = User.objects.create(username=username,email=email,
                     first_name=first_name,last_name=last_name,bio=bio)
-
-
-
+            
         print("fake users generated")
 
  
