@@ -54,7 +54,7 @@ class EmailVerificationView(APIView):
         uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
 
 
-        data = email_body(request, user, reverse_name='verify-email', mail_body='verify email', form_type="post", token = token, uidb64=uidb64)
+        data = email_body(request, user, reverse_name='verify-email', mail_body='verify email', form_type="get", token = token, uidb64=uidb64)
 
         send_email(data)
 
@@ -188,7 +188,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 uidb64 = urlsafe_base64_encode(smart_bytes(user.id))    
 
 
-                mail_data = email_body(request, user, reverse_name="verify-email", mail_body='verify email', form_type="post",token=token, uidb64=uidb64)
+                mail_data = email_body(request, user, reverse_name="verify-email", mail_body='verify email', form_type="get",token=token, uidb64=uidb64)
                 send_email(mail_data)
 
                 return Response({
