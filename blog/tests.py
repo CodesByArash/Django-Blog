@@ -12,7 +12,8 @@ from .views import *
 
 class ArticleListViewTestCase(APITestCase):
     def setUp(self):
-        self.user     = User(username="test", email="test@test.com", password="test")
+        self.user     = User(username="test", email="test@test.com")
+        self.user.set_password('test')
         self.user.save()
         self.category = Category(name="test", description="test")
         self.category.save()
@@ -35,7 +36,8 @@ class ArticleListViewTestCase(APITestCase):
 
 class ArticleDetailViewTestCase(APITestCase):
     def setUp(self):
-        self.user     = User(username="test", email="test@test.com", password="test")
+        self.user     = User(username="test", email="test@test.com")
+        self.user.set_password('test')
         self.user.save()
         self.category = Category(name="test", description="test")
         self.category.save()
@@ -69,7 +71,8 @@ class ArticleDetailViewTestCase(APITestCase):
 
 class CategoryListViewTestCase(APITestCase):
     def setUp(self):
-        self.user     = User(username="test", email="test@test.com", password="test")
+        self.user     = User(username="test", email="test@test.com")
+        self.user.set_password('test')
         self.user.is_staff = True
         self.user.save()
         self.category = Category(name="test", description="test")
@@ -90,7 +93,8 @@ class CategoryListViewTestCase(APITestCase):
 
 class CategoryDetailViewTestCase(APITestCase):
     def setUp(self):
-        self.user     = User(username="test", email="test@test.com", password="test")
+        self.user     = User(username="test", email="test@test.com")
+        self.user.set_password('test')
         self.user.is_staff = True
         self.user.save()
         self.category = Category(name="test", description="test")
@@ -144,7 +148,8 @@ class CategoryDetailViewTestCase(APITestCase):
 
 class CategoryArticleListViewTestCase(APITestCase):
     def setUp(self):
-        self.user     = User(username="test", email="test@test.com", password="test")
+        self.user     = User(username="test", email="test@test.com")
+        self.user.set_password('test')
         self.user.save()
         self.category = Category(name="test", description="test")
         self.category.save()
@@ -160,7 +165,8 @@ class CategoryArticleListViewTestCase(APITestCase):
 
 class SearchListViewTestCase(APITestCase):
     def setUp(self):
-        self.user     = User(username="test", email="test@test.com", password="test")
+        self.user     = User(username="test", email="test@test.com")
+        self.user.set_password('test')
         self.user.save()
         self.category = Category(name="test", description="test")
         self.category.save()

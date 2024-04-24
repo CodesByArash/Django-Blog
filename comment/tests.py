@@ -12,7 +12,8 @@ from .views import CommentDetailView,ArticleCommentsListView
 # Create your tests here.
 class ArticleCommentsListViewTestCase(APITestCase):
     def setUp(self):
-        self.user     = User(username="test", email="test@test.com", password="test")
+        self.user     = User(username="test", email="test@test.com")
+        self.user.set_password('test')
         self.user.save()
         self.category = Category(name="test", description="test")
         self.category.save()
@@ -36,7 +37,8 @@ class ArticleCommentsListViewTestCase(APITestCase):
 
 class CommentsDetailViewTestCase(APITestCase):
     def setUp(self):
-        self.user     = User(username="test", email="test@test.com", password="test")
+        self.user     = User(username="test", email="test@test.com")
+        self.user.set_password('test')
         self.user.save()
         self.category = Category(name="test", description="test")
         self.category.save()

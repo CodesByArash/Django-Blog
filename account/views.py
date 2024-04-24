@@ -6,7 +6,6 @@ from rest_framework.permissions import (IsAuthenticated, AllowAny,)
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
