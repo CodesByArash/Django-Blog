@@ -152,13 +152,13 @@ class PasswordChangeView(APIView):
     def put(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             user = self.get_object()
             user.set_password(serializer.validated_data["new_password"])
             user.save()
             return Response({"message": "password updated successfully"})
         else:
-            return Response({"message": "failed", "details": serializer.errors})
+            return Response({"message": "failed", "details": serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
 # user crud views
 class UserViewSet(viewsets.ModelViewSet):
@@ -192,16 +192,13 @@ class UserViewSet(viewsets.ModelViewSet):
                 send_email(mail_data)
 
                 return Response({
-                    'status':200,
                     'message':'registered succesfully check email',
                     'data':serializer.data,
-                })
+                },status=status.HTTP_201_CREATED)
             
             return Response({
-                'status':400,
-                'message':'something went wrong',
                 'data': serializer.errors
-            })
+            },status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'message': f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
