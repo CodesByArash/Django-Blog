@@ -18,7 +18,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         if passw and c_passw:
             if passw != c_passw:
                 raise serializers.ValidationError("passwords should match")
-        print("validation")
         return data
 
     def create(self, validated_data):
@@ -28,8 +27,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         
-        print("create")
-
         return user
 
 
