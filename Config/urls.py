@@ -30,5 +30,4 @@ urlpatterns = [
     path('account/', include("account.urls")),
     path('', include("blog.urls")),
     path('', include("comment.urls")),
-
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
