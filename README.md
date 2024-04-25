@@ -25,7 +25,7 @@ Then install the dependencies:
 Once `pip` has finished downloading the dependencies:
 ```sh
 (env)$ cd backend 
-(env)$ python manage.py runserver
+(env)$ python manage.py runserver --settings=Config.local
 
 ```
 And navigate to `http://127.0.0.1:8000/`.
