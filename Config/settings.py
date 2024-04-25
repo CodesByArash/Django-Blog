@@ -14,8 +14,6 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
-docker = os.environ.get('DOCKER', None)
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,19 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-SECRET_KEY = os.environ.get('SECRET_KEY',
-                            'django-insecure-js+477q(q_kf3l6puftw0g019cgah8o)50wro0e)2zd($hpgs=')
+SECRET_KEY = 'django-insecure-js+477q(q_kf3l6puftw0g019cgah8o)50wro0e)2zd($hpgs='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-if docker != "docker":
-    DEBUG = True
-else:
-    DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0',]
-
-if docker != 'docker':
-    ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -75,7 +66,7 @@ ROOT_URLCONF = 'Config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -91,22 +82,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Config.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-if docker == "docker":
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB'),
-            'USER': os.environ.get('POSTGRES_USER'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-            'HOST': 'db',
-            'PORT':5432
-        }
-    }
-else:     
-    DATABASES = {
+DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
@@ -168,7 +145,10 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/second',
         'user': '1000/second'
-    }
+    },
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10,
+
 }
 
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
@@ -186,4 +166,3 @@ SIMPLE_JWT = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
