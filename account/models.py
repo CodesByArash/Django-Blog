@@ -15,7 +15,6 @@ class User(AbstractUser):
     last_name         = models.CharField(default = "null", max_length=500, blank=True, null=True)
     is_staff          = models.BooleanField(default=False, verbose_name='staff')
     bio               = models.TextField(blank=True, null = True, max_length=500)
-    profile_img       = models.ImageField(upload_to='profile_images',default='/profile_images/default.png')
     posts             = models.IntegerField(default=0)
     
 
