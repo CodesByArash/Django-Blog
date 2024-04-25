@@ -22,6 +22,7 @@ from .utils import *
 from .models import *
 from .tokens import account_activation_token
 from .permissions import *
+from .paginations import *
 
 User = get_user_model()
 
@@ -162,6 +163,7 @@ class PasswordChangeView(APIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     lookup_field = 'username'
+    pagination_class = UserLimitOffsetPagination
     def get_permissions(self):
 
         if self.action in ['partial_update', 'update', 'destroy', ]:

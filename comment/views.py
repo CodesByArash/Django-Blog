@@ -9,7 +9,7 @@ from .permissions import *
 from .serializers import *
 from .models import *
 from blog.models import Article
-
+from .pagination import *
 
 # Create your views here.
 class CommentDetailView(RetrieveUpdateDestroyAPIView, ):
@@ -25,6 +25,7 @@ class CommentDetailView(RetrieveUpdateDestroyAPIView, ):
 class ArticleCommentsListView(ListCreateAPIView):
     serializer_class   = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, ]
+    pagination_class   = CommentLimitOffsetPagination
     def get_queryset(self):
         slug  = self.kwargs.get('slug')
         article  = get_object_or_404(Article, slug = slug)

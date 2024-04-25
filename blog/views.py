@@ -13,12 +13,12 @@ from comment.permissions import IsAuthenticatedOrReadOnly
 from .permissions import *
 from .serializers import *
 from .models import *
-
-
+from .paginations import *
  
 class ArticleListView(ListCreateAPIView):
     serializer_class   = ArticleSerializer
     permission_classes = [IsAuthenticatedOrReadOnly,]
+    pagination_class   = ArticleLimitOffsetPagination
     def get_queryset(self):
         user = self.request.user
         if user.is_authenticated:
@@ -27,15 +27,7 @@ class ArticleListView(ListCreateAPIView):
             return Article.objects.filter(Q(status=True) | Q(author=user))
 
         return Article.objects.filter(status=True)
-    '''
-    # def get_permissions(self):
-    #     if self.request.method == 'POST':
-    #         permission_classes = [IsAuthenticated,]
-    #     else:
-    #         permission_classes = [AllowAny,]
-        
-    #     return [permission() for permission in permission_classes]
-    '''
+
   
 class ArticleDetailView(RetrieveUpdateDestroyAPIView, ):
     serializer_class   = ArticleSerializer
@@ -55,6 +47,7 @@ class CategoryListView(ListCreateAPIView):
     lookup_field       = "name"
     queryset           = Category.objects.all()
     permission_classes = [IsStaffOrReadOnly, ]
+    pagination_class   = categoryLimitOffsetPagination
 
 class CategoryDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class   = CategorySerializer
@@ -64,6 +57,7 @@ class CategoryDetailView(RetrieveUpdateDestroyAPIView):
 
 class CategoryArticleListView(ListAPIView):
     serializer_class   = ArticleSerializer
+    pagination_class   = ArticleLimitOffsetPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -88,4 +82,5 @@ class ArticleSearchView(ListAPIView):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     filter_backends = [SearchFilter]
+    pagination_class = ArticleLimitOffsetPagination
     search_fields = ['content', 'title', "publish"]
