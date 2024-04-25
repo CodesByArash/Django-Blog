@@ -5,10 +5,9 @@ services:
     build: .
     command: 
       sh -c "
-            python manage.py makemigrations &&
             python manage.py migrate &&
             python manage.py initadmin admin admin@admin.com admin &&
-            python manage.py runserver 0.0.0.0:8000 --settings=Config.docker"
+            python manage.py runserver --settings=Config.docker"
     volumes:
       - .:/code
     env_file:
