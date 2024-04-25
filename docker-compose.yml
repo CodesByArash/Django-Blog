@@ -1,33 +1,32 @@
 version: '3.9'
 
 services:
+  web:
+    build: .
+    command: 
+      sh -c "
+            python manage.py makemigrations &&
+            python manage.py migrate &&
+            python manage.py initadmin admin admin@admin.com admin &&
+            python manage.py runserver 0.0.0.0:8000 --settings=Config.docker"
+    volumes:
+      - .:/code
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
   db:
     image: postgres:16-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    expose:
+      - 5432
     environment:
-      - POSTGRES_DB = postgres
-      - POSTGRES_USER = postgres
-      - POSTGRES_PASSWORD = postgres
-  web:
-      build: .
-      command: 
-        sh -c "
-         python manage.py migrate
-         python manage.py runserver 0.0.0.0:8000"
-
-      volumes:
-        - .:/code
-      environment:
-        - DOCKER = docker
-        - POSTGRES_DB = postgres
-        - POSTGRES_USER = postgres
-        - POSTGRES_PASSWORD = postgres
-        - SECRET_KEY = django-insecure-js+477q(q_kf3l6puftw0g019cgah8o)50wro0e)2zd($hpgs=
-      ports:
-        - "8000:8000"
-      depends_on:
-        - db
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
 
 volumes:
   postgres_data:
