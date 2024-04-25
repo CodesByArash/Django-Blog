@@ -42,7 +42,7 @@ And navigate to `http://127.0.0.1:8000/`.
 ```sh
   $ docker-compose up
 ```
-then view the site at  http://0.0.0.0:8000/
+then view the site at  http://127.0.0.1:8000/
 
 ## Walkthrough
 
