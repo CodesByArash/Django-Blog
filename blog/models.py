@@ -38,3 +38,9 @@ class Article(models.Model):
     def __str__(self):
         return self.title
     
+    
+class Rating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, related_name='ratings', on_delete=models.CASCADE)
+    score = models.IntegerField()
+    created_at = models.DateTimeField(default=timezone.now)

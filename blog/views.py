@@ -1,6 +1,12 @@
 from rest_framework.generics import (ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView)
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.filters import SearchFilter
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import Article, Rating
+from .serializers import ArticleSerializer, RatingSerializer
+
 
 from .models import Article
 from .serializers import ArticleSerializer
@@ -84,3 +90,23 @@ class ArticleSearchView(ListAPIView):
     filter_backends = [SearchFilter]
     pagination_class = ArticleLimitOffsetPagination
     search_fields = ['content', 'title', "publish"]
+    
+    
+class RatingViewSet(viewsets.ModelViewSet):
+    queryset = Rating.objects.all()
+    serializer_class = RatingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        article_id = request.data.get('article')
+        score = request.data.get('score')
+
+        rating, created = Rating.objects.update_or_create(
+            user=user,
+            article_id=article_id,
+            defaults={'score': score, 'created_at': timezone.now()}
+        )
+
+        return Response(RatingSerializer(rating).data, status=status.HTTP_201_CREATED)
+  

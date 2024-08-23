@@ -7,7 +7,7 @@ class IsSuperUser(BasePermission):
         return bool(request.user and request.user.is_superuser)
     
     
-    
+ 
 class IsStaffOrReadOnly(BasePermission):
     
     def has_permission(self, request, view):
